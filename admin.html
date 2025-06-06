@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aero Congress 2025 - Panou Administrare</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Stilurile Originale Sunt Păstrate 1:1 */
+        body { font-family: 'Inter', sans-serif; background-color: #f2f0f0; background-image: radial-gradient(circle at top right, #ffdde1 0%, #f2f0f0 50%); -webkit-font-smoothing: antialiased; transition: background-color 0.3s; }
+        .form-input { transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 600; padding: 0.6rem 1.2rem; border-radius: 0.5rem; transition: background-color 0.2s, opacity 0.2s; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .sortable:hover { background-color: #e5e7eb; cursor: pointer; }
+        .modal.hidden { display: none; }
+        #delegate-regType { -webkit-appearance: menulist; -moz-appearance: menulist; appearance: menulist; }
+        .sort-icon { opacity: 0.5; }
+        .lang-btn { opacity: 0.6; transition: opacity 0.2s, transform 0.2s; transform: scale(0.9); }
+        .lang-btn.active, .lang-btn:hover { opacity: 1; transform: scale(1); }
+        #back-to-top { opacity: 0; visibility: hidden; transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out; }
+        #back-to-top.visible { opacity: 1; visibility: visible; }
+        .dark body { background-color: #111827; background-image: radial-gradient(circle at top right, #4b1a23 0%, #111827 50%); color: #d1d5db; }
+        .dark .glass-container, .dark .bg-white { background-color: #1f2937; border-color: #374151; }
+        .dark .text-gray-800 { color: #f9fafb; } .dark .text-gray-700 { color: #d1d5db; } .dark .text-gray-600 { color: #9ca3af; } .dark .text-gray-500 { color: #6b7280; }
+        .dark .border-gray-300 { border-color: #4b5563; } .dark .bg-gray-100 { background-color: #374151; } .dark .bg-gray-200 { background-color: #4b5563; }
+        .dark .sortable:hover, .dark .hover\:bg-gray-50:hover { background-color: #374151; }
+        .dark .form-input { background-color: #374151; color: #f9fafb; }
+        .dark #delegate-regType { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <main id="main-content" class="w-full max-w-7xl mx-auto space-y-8 hidden">
+        <header class="flex flex-wrap gap-4 justify-between items-center pb-4 border-b border-gray-300">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800" data-translate-key="admin_title">Panou Administrare</h1>
+                <p class="text-gray-500" id="admin-datetime"></p>
+            </div>
+            <div class="flex items-center gap-4">
+                <button id="dark-mode-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700" title="Comută tema">
+                    <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.706-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 14.95a1 1 0 010-1.414l.707-.707a1 1 0 011.414 1.414l-.707.707a1 1 0 01-1.414 0zM3 11a1 1 0 100-2H2a1 1 0 100 2h1z"/></svg>
+                    <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 20 20" fill="currentColor"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" /></svg>
+                </button>
+                <div id="lang-switcher" class="flex justify-center items-center gap-3">
+                    <button data-lang="ro" class="lang-btn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 24" width="24" height="16" class="rounded-sm shadow-md pointer-events-none"><path fill="#002B7F" d="M0 0h12v24H0z"/><path fill="#FCD116" d="M12 0h12v24H12z"/><path fill="#CE1126" d="M24 0h12v24H24z"/></g></svg></button>
+                    <button data-lang="en" class="lang-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="16" class="rounded-sm shadow-md pointer-events-none" viewBox="0 0 72 48"><path fill="#B31942" d="M0 0h72v48H0z"/><path fill="#fff" d="M0 4.8h72v4.8H0zm0 9.6h72v4.8H0zm0 9.6h72v4.8H0zm0 9.6h72v4.8H0zm0 9.6h72v4.8H0z"/><path fill="#0A3161" d="M0 0h36v28.8H0z"/><path fill="#fff" d="m6 3.6 1.1.8L8 3.6V2.4l-1 .7-.9-.7zm6 0 1.1.8L14 .8V2.4l-1 .7-.9-.7zm6 0 1.1.8L20 .8V2.4l-1 .7-.9-.7zm6 0 1.1.8L26 .8V2.4l-1 .7-.9-.7zm6 0 1.1.8L32 .8V2.4l-1 .7-.9-.7zm-27 4.8.9.8L2 8.4V7.2l1 .7 1-.7zm6 0 .9.8L8 8.4V7.2l1 .7 1-.7zm6 0 .9.8L14 8.4V7.2l1 .7 1-.7zm6 0 .9.8L20 8.4V7.2l1 .7 1-.7zm6 0 .9.8L26 8.4V7.2l1 .7 1-.7zm-27 4.8.9.8L2 13.2V12l1 .7 1-.7zm6 0 .9.8L8 13.2V12l1 .7 1-.7zm6 0 .9.8L14 13.2V12l1 .7 1-.7zm6 0 .9.8L20 13.2V12l1 .7 1-.7zm6 0 .9.8L26 13.2V12l1 .7 1-.7zm-27 4.8.9.8L2 18V16.8l1 .7 1-.7zm6 0 .9.8L8 18V16.8l1 .7 1-.7zm6 0 .9.8L14 18V16.8l1 .7 1-.7zm6 0 .9.8L20 18V16.8l1 .7 1-.7zm6 0 .9.8L26 18V16.8l1 .7 1-.7z"/></svg></button>
+                    <button data-lang="fr" class="lang-btn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 24" width="24" height="16" class="rounded-sm shadow-md pointer-events-none"><path fill="#002395" d="M0 0h12v24H0z"/><path fill="#FFF" d="M12 0h12v24H12z"/><path fill="#ED2939" d="M24 0h12v24H24z"/></svg></button>
+                </div>
+                <button id="logout-btn" class="btn bg-gray-600 hover:bg-gray-700 text-white hidden"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V5h10a1 1 0 100-2H3zm12.293 4.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L16.586 13H9a1 1 0 110-2h7.586l-1.293-1.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg><span>Deconectare</span></button>
+                <a href="index.html" class="btn bg-blue-600 hover:bg-blue-700 text-white"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg><span data-translate-key="back_to_main_page">Pagina Principală</span></a>
+            </div>
+        </header>
+        
+        <section id="dashboard" class="space-y-4">
+            <div id="stats-cards-types" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 text-center"></div>
+            <div id="stats-card-total" class="text-center"></div>
+        </section>
+
+        <section id="add-edit-section" class="p-6 bg-white rounded-xl shadow-md glass-container">
+            <h2 class="text-xl font-semibold mb-4 text-gray-700" id="form-title" data-translate-key="modal_add_delegate_title">Adaugă Delegat Nou</h2>
+            <form id="delegate-form" novalidate class="space-y-4">
+                 <input type="hidden" id="delegate-id-input">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium mb-1" data-translate-key="modal_firstname_label">Nume</label>
+                        <input type="text" id="delegate-firstName" required class="w-full p-2 border border-gray-300 rounded-md bg-white form-input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1" data-translate-key="modal_lastname_label">Prenume</label>
+                        <input type="text" id="delegate-lastName" required class="w-full p-2 border border-gray-300 rounded-md bg-white form-input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1" data-translate-key="company_label">Companie</label>
+                        <input type="text" id="delegate-company" class="w-full p-2 border border-gray-300 rounded-md bg-white form-input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1" data-translate-key="email_label">Email</label>
+                        <input type="email" id="delegate-email" required class="w-full p-2 border border-gray-300 rounded-md bg-white form-input">
+                        <p id="email-error" class="text-red-500 text-xs mt-1 hidden">Adresa de email nu este validă.</p>
+                        </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1" data-translate-key="modal_phone_label">Telefon</label>
+                        <input type="tel" id="delegate-phone" class="w-full p-2 border border-gray-300 rounded-md bg-white form-input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1" data-translate-key="regnumber_label">Nr. Înregistrare</label>
+                        <input type="text" id="delegate-regNumber" required class="w-full p-2 border border-gray-300 rounded-md bg-white form-input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1" data-translate-key="modal_regtype_label">Tip Înregistrare</label>
+                        <select id="delegate-regType" class="w-full p-2 border border-gray-300 rounded-md bg-white form-input"></select>
+                    </div>
+                    <div class="lg:col-span-2">
+                        <label class="block text-sm font-medium mb-1" data-translate-key="certificate_url_label">Link Certificat Participare (PDF)</label>
+                        <input type="url" id="delegate-certificateUrl" placeholder="https://.../certificat.pdf" class="w-full p-2 border border-gray-300 rounded-md bg-white form-input">
+                    </div>
+                </div>
+                <div class="flex gap-4 mt-6">
+                    <button type="submit" class="btn bg-blue-600 text-white hover:bg-blue-700"><svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7.5 2.5a.5.5 0 01.5.5v2.5h2.5a.5.5 0 010 1h-2.5V9a.5.5 0 01-1 0V6.5H5a.5.5 0 010-1h2.5V3a.5.5 0 01.5-.5z"/><path d="M3 1a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V2a1 1 0 00-1-1H3zm9.5 1.5a1 1 0 11-2 0 1 1 0 012 0z"/></svg><span id="save-btn-text" data-translate-key="modal_save_button">Salvează</span></button>
+                    <button type="button" id="cancel-edit-btn" class="hidden btn bg-gray-200 text-gray-800 hover:bg-gray-300" data-translate-key="modal_cancel">Anulează</button>
+                </div>
+            </form>
+        </section>
+
+        <section id="table-section" class="p-6 bg-white rounded-xl shadow-md glass-container">
+             <div class="flex flex-wrap gap-4 mb-4 justify-between items-center">
+                <div class="flex flex-wrap gap-4 items-center">
+                    <div class="relative">
+                        <input type="search" id="table-search" class="p-2 pl-8 border border-gray-300 rounded-md bg-white form-input" placeholder="Caută...">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none"><svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/></svg></div>
+                    </div>
+                    <div class="relative">
+                        <select id="reg-type-filter" class="p-2 border border-gray-300 rounded-md bg-white form-input">
+                            <option value="all">Toate Tipurile</option>
+                        </select>
+                    </div>
+                    </div>
+                <button id="delete-selected-btn" class="hidden btn bg-red-600 hover:bg-red-700 text-white"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg><span data-translate-key="delete_selected_button">Șterge Selecția</span></button>
+                </div>
+            <div class="overflow-x-auto border rounded-lg border-gray-300">
+                <table class="w-full text-sm text-left text-gray-700">
+                    <thead class="text-xs text-gray-800 uppercase bg-gray-100">
+                        <tr>
+                            <th class="p-3"><input type="checkbox" id="select-all-checkbox" class="rounded border-gray-400"></th>
+                            <th class="px-4 py-3 sortable" data-sort="lastName"><span data-translate-key="table_fullname">Nume</span></th>
+                            <th class="px-4 py-3 sortable" data-sort="company"><span data-translate-key="table_company">Companie</span></th>
+                            <th class="px-4 py-3 sortable" data-sort="email"><span data-translate-key="table_email">Email</span></th>
+                            <th class="px-4 py-3 sortable" data-sort="regNumber"><span data-translate-key="table_regnumber">Nr. Înreg.</span></th>
+                            <th class="px-4 py-3 sortable" data-sort="regType"><span data-translate-key="table_type">Tip</span></th>
+                            <th class="px-4 py-3 text-right" data-translate-key="table_actions">Acțiuni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="delegates-table-body" class="bg-white divide-y divide-gray-300"></tbody>
+                </table>
+            </div>
+            <nav id="pagination-controls" class="flex flex-wrap gap-4 justify-between items-center pt-4"></nav>
+        </section>
+    </main>
+
+    <div id="password-modal" class="modal fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50"></div>
+    <div id="confirm-modal" class="modal hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50"></div>
+    <div id="message-modal" class="modal hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50"></div>
+    <div id="preview-modal" class="modal hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50"></div>
+    <a href="#" id="back-to-top" class="fixed bottom-5 right-5 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg></a>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 🚀 START: Configurare Supabase
+    const SUPABASE_URL = 'https://pgnrxhgosbiqstzbctkf.supabase.co'; // 👈 ÎNLOCUIEȘTE AICI
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBnbnJ4aGdvc2JpcXN0emJjdGtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkyMTQ0MzgsImV4cCI6MjA2NDc5MDQzOH0.N6eucwdtqL2PST7f7PQVqlMhYMpJOvqfLkt-VGf6YMQ'; // 👈 ÎNLOCUIEȘTE AICI
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // 🚀 END: Configurare Supabase
+
+    // --- Traduceri și Configurare (Original) ---
+    const translations = {
+        admin_title: { ro: "Panou Administrare", en: "Admin Panel", fr: "Panneau d'Administration" },
+        back_to_main_page: { ro: "Pagina Principală", en: "Main Page", fr: "Page Principale" },
+        modal_add_delegate_title: { ro: "Adaugă Delegat Nou", en: "Add New Delegate", fr: "Ajouter un Nouveau Délégué" },
+        modal_edit_delegate_title: { ro: "Editează Delegat", en: "Edit Delegate", fr: "Modifier le Délégué" },
+        modal_firstname_label: { ro: "Nume", en: "First Name", fr: "Prénom" },
+        modal_lastname_label: { ro: "Prenume", en: "Last Name", fr: "Nom de Famille" },
+        company_label: { ro: "Companie", en: "Company", fr: "Entreprise" },
+        email_label: { ro: "Email", en: "Email Address", fr: "Adresse E-mail" },
+        modal_phone_label: { ro: "Telefon", en: "Phone", fr: "Téléphone" },
+        regnumber_label: { ro: "Nr. Înregistrare", en: "Registration No.", fr: "N° d'Enregistrement" },
+        modal_regtype_label: { ro: "Tip Înregistrare", en: "Registration Type", fr: "Type d'Enregistrement" },
+        certificate_url_label: { ro: "Link Certificat Participare (PDF)", en: "Certificate Link (PDF)", fr: "Lien du Certificat (PDF)" },
+        modal_save_button: { ro: "Salvează", en: "Save", fr: "Enregistrer" },
+        modal_update_button: { ro: "Actualizează", en: "Update", fr: "Mettre à jour" },
+        modal_cancel: { ro: "Anulează", en: "Cancel", fr: "Annuler" },
+        table_fullname: { ro: "Nume complet", en: "Full Name", fr: "Nom Complet" },
+        table_company: { ro: "Companie", en: "Company", fr: "Entreprise" },
+        table_email: { ro: "Email", en: "Email", fr: "E-mail" },
+        table_regnumber: { ro: "Nr. Înreg.", en: "Reg. No.", fr: "N° d'Enreg." },
+        table_type: { ro: "Tip", en: "Type", fr: "Type" },
+        table_actions: { ro: "Acțiuni", en: "Actions", fr: "Actions" },
+        modal_confirm_title: { ro: "Confirmare Acțiune", en: "Confirm Action", fr: "Confirmer l'action" },
+        modal_confirm_delete_text: { ro: "Pentru a șterge, tastați", en: "To delete, please type", fr: "Pour supprimer, veuillez taper" },
+        modal_confirm_delete_selected_text: { ro: "Pentru a șterge delegații selectați, tastați", en: "To delete selected delegates, please type", fr: "Pour supprimer les délégués sélectionnés, veuillez taper" },
+        delete_selected_button: { ro: "Șterge Selecția", en: "Delete Selected", fr: "Supprimer la sélection" },
+        modal_confirm_yes: { ro: "Confirmă", en: "Confirm", fr: "Confirmer" },
+        modal_cancel_action: { ro: "Anulează", en: "Cancel", fr: "Annuler" },
+        modal_success_title: { ro: "Succes", en: "Success", fr: "Succès" },
+        modal_error_title: { ro: "Eroare", en: "Error", fr: "Erreur" },
+        required_fields_error: { ro: "Vă rugăm să completați toate câmpurile obligatorii (Nume, Prenume, Email, Nr. Înregistrare).", en: "Please fill all required fields (First Name, Last Name, Email, Reg. No.).", fr: "Veuillez remplir tous les champs obligatoires (Prénom, Nom, Email, N° d'Enreg.)." },
+        invalid_email_error: { ro: "Vă rugăm introduceți o adresă de email validă.", en: "Please enter a valid email address.", fr: "Veuillez entrer une adresse e-mail valide." },
+        password_title: { ro: "Acces Protejat", en: "Protected Access", fr: "Accès Protégé" },
+        password_text: { ro: "Introduceți credențialele pentru a accesa panoul.", en: "Enter your credentials to access the panel.", fr: "Entrez vos identifiants pour accéder au panneau." },
+        password_error_text: { ro: "Email sau parolă incorectă!", en: "Incorrect email or password!", fr: "Email ou mot de passe incorrect!" },
+        duplicate_error_text: { ro: "Un delegat cu acest email sau număr de înregistrare există deja.", en: "A delegate with this email or registration number already exists.", fr: "Un délégué avec cet e-mail ou ce numéro d'enregistrement existe déjà." },
+        no_certificate_url_error: { ro: "Acest delegat nu are un link de certificat asociat.", en: "This delegate does not have a certificate link associated.", fr: "Ce délégué n'a pas de lien de certificat associé." },
+    };
+    const REG_TYPES = ['Non-Member', 'Member', 'Speaker', 'Sponsor', 'Staff'];
+
+    // --- State Management (Original) ---
+    let allDelegates = [];
+    let currentLanguage = 'ro';
+    let sortConfig = { key: 'lastName', direction: 'ascending' };
+    let currentPage = 1;
+    let itemsPerPage = 10;
+    let filters = { regType: 'all', searchTerm: '' };
+    let selectedDelegateIds = new Set();
+    
+    // --- DOM Elements (Original) ---
+    const mainContent = document.getElementById('main-content');
+    const passwordModal = document.getElementById('password-modal');
+    const confirmModal = document.getElementById('confirm-modal');
+    const messageModal = document.getElementById('message-modal');
+    const form = document.getElementById('delegate-form');
+    const langSwitcher = document.getElementById('lang-switcher');
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
+
+    // --- UI/Helper Functions (Original) - Autonome, nu necesită modificare ---
+    const showMessage = (titleKey, textKey, isSuccess = true) => {
+        const title = translations[titleKey]?.[currentLanguage] || titleKey;
+        const text = translations[textKey]?.[currentLanguage] || textKey;
+        const icon = isSuccess ? `<svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>` : `<svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+        messageModal.innerHTML = `<div class="bg-white max-w-sm w-full rounded-2xl shadow-xl p-8 text-center glass-container"><div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full ${isSuccess ? 'bg-green-100' : 'bg-red-100'}">${icon}</div><h3 id="message-modal-title" class="text-xl font-bold text-gray-800 mt-4 mb-2">${title}</h3><p class="text-gray-600 mb-6">${text}</p><button class="close-modal-btn btn bg-blue-600 text-white w-full">OK</button></div>`;
+        messageModal.classList.remove('hidden');
+        messageModal.querySelector('.close-modal-btn').focus();
+        messageModal.querySelector('.close-modal-btn').onclick = () => messageModal.classList.add('hidden');
+    };
+    const showDestructiveConfirmation = (titleKey, textKey, matchText, onConfirm) => {
+        confirmModal.innerHTML = `<div class="bg-white max-w-lg w-full rounded-2xl shadow-xl p-8 glass-container"><h3 id="confirm-modal-title" class="text-xl font-bold text-gray-800 mb-2">${translations[titleKey][currentLanguage]}</h3><p class="text-gray-600 mb-4">${translations[textKey][currentLanguage]} <strong class="text-red-600">${matchText}</strong></p><input type="text" id="confirm-input" class="w-full p-2 border border-gray-300 rounded-md bg-white form-input mb-4"><div class="flex justify-end gap-4"><button id="cancel-confirm-btn" class="btn bg-gray-200 text-gray-800 hover:bg-gray-300">${translations.modal_cancel_action[currentLanguage]}</button><button id="do-confirm-btn" class="btn bg-red-600 text-white opacity-50 cursor-not-allowed" disabled>${translations.modal_confirm_yes[currentLanguage]}</button></div></div>`;
+        confirmModal.classList.remove('hidden');
+        const confirmInput = document.getElementById('confirm-input');
+        const doBtn = document.getElementById('do-confirm-btn');
+        const cancelBtn = document.getElementById('cancel-confirm-btn');
+        confirmInput.focus();
+        const close = () => confirmModal.classList.add('hidden');
+        cancelBtn.onclick = close;
+        confirmInput.oninput = () => { doBtn.disabled = confirmInput.value !== matchText; doBtn.classList.toggle('opacity-50', doBtn.disabled); doBtn.classList.toggle('cursor-not-allowed', doBtn.disabled); };
+        doBtn.onclick = () => { onConfirm(); close(); };
+    };
+    const debounce = (func, delay) => { let timeout; return (...args) => { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); }; };
+    const applyTheme = (theme) => {
+        const lightIcon = document.getElementById('theme-icon-light');
+        const darkIcon = document.getElementById('theme-icon-dark');
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+            lightIcon.classList.add('hidden');
+            darkIcon.classList.remove('hidden');
+        } else {
+            document.documentElement.classList.remove('dark');
+            lightIcon.classList.remove('hidden');
+            darkIcon.classList.add('hidden');
+        }
+    };
+    const setLanguage = (lang) => { 
+        currentLanguage = lang; 
+        document.documentElement.lang = lang; 
+        document.querySelectorAll('[data-translate-key]').forEach(el => { 
+            const key = el.dataset.translateKey; 
+            if (translations[key]?.[lang]) {
+                const target = el.tagName === 'SPAN' ? el : el.querySelector('span') || el;
+                target.textContent = translations[key][lang];
+            }
+        }); 
+        langSwitcher.querySelectorAll('button').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
+        updateClock(); 
+    };
+    const updateClock = () => { 
+        const locale = currentLanguage === 'ro' ? 'ro-RO' : currentLanguage === 'en' ? 'en-GB' : 'fr-FR'; 
+        document.getElementById('admin-datetime').textContent = new Date().toLocaleString(locale, { dateStyle: 'full', timeStyle: 'short' }); 
+    };
+    const renderPagination = (filteredCount, totalPages) => {
+        const paginationContainer = document.getElementById('pagination-controls');
+        if(totalPages <= 1 && filteredCount <= itemsPerPage) { paginationContainer.innerHTML = ''; return; }
+        const itemsPerPageOptions = [10, 25, 50, 100].map(num => `<option value="${num}" ${itemsPerPage == num ? 'selected' : ''}>${num} / pagină</option>`).join('');
+        paginationContainer.innerHTML = `<div class="flex items-center gap-4"><span class="text-sm text-gray-500">${((currentPage - 1) * itemsPerPage) + 1} - ${Math.min(currentPage * itemsPerPage, filteredCount)} din ${filteredCount}</span><select id="items-per-page-select" class="p-2 border border-gray-300 rounded-md bg-white form-input text-sm">${itemsPerPageOptions}</select></div><div class="flex gap-2"><button class="prev-page btn bg-white border border-gray-300" ${currentPage === 1 ? 'disabled' : ''}>&lt;</button><button class="next-page btn bg-white border border-gray-300" ${currentPage >= totalPages ? 'disabled' : ''}>&gt;</button></div>`;
+    };
+    const renderDashboard = () => {
+        const stats = allDelegates.reduce((acc, d) => ({ ...acc, [d.regType]: (acc[d.regType] || 0) + 1 }), {});
+        document.getElementById('stats-cards-types').innerHTML = REG_TYPES.map(type => `<div class="p-4 bg-white rounded-lg shadow glass-container"><div class="font-bold text-2xl">${stats[type] || 0}</div><div class="text-sm text-gray-500">${type}</div></div>`).join('');
+        document.getElementById('stats-card-total').innerHTML = `<div class="p-4 bg-blue-600 text-white rounded-lg shadow-lg"><div class="font-bold text-3xl">${allDelegates.length}</div><div class="text-sm opacity-80">Total Participanți</div></div>`;
+    };
+    const updateBulkDeleteButton = () => { document.getElementById('delete-selected-btn').classList.toggle('hidden', selectedDelegateIds.size === 0); };
+
+    // --- Funcția Principală de Randare (Original) ---
+    const renderPage = () => {
+        let filteredDelegates = allDelegates.filter(d => {
+            const searchTermMatch = !filters.searchTerm || 
+                `${d.firstName || ''} ${d.lastName || ''}`.toLowerCase().includes(filters.searchTerm) || 
+                (d.email || '').toLowerCase().includes(filters.searchTerm) || 
+                (d.company||'').toLowerCase().includes(filters.searchTerm) || 
+                (d.regNumber || '').toLowerCase().includes(filters.searchTerm);
+            
+            const regTypeMatch = filters.regType === 'all' || d.regType === filters.regType;
+            return searchTermMatch && regTypeMatch;
+        });
+        
+        filteredDelegates.sort((a, b) => {
+            const key = sortConfig.key;
+            let aValue = (key === 'name' ? `${a.firstName} ${a.lastName}` : (a[key] || '')).toString().toLowerCase();
+            let bValue = (key === 'name' ? `${b.firstName} ${b.lastName}` : (b[key] || '')).toString().toLowerCase();
+            if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
+            if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
+            return 0;
+        });
+
+        document.querySelectorAll('.sortable .sort-icon').forEach(icon => icon.remove());
+        const activeSortHeader = document.querySelector(`.sortable[data-sort="${sortConfig.key}"]`);
+        if(activeSortHeader) activeSortHeader.insertAdjacentHTML('beforeend', `<span class="sort-icon ml-1">${sortConfig.direction === 'ascending' ? '▲' : '▼'}</span>`);
+
+        const totalPages = Math.ceil(filteredDelegates.length / itemsPerPage);
+        currentPage = Math.min(currentPage, totalPages) || 1;
+        const paginatedDelegates = filteredDelegates.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+        
+        document.getElementById('delegates-table-body').innerHTML = paginatedDelegates.map(d => `
+            <tr class="border-b border-gray-300 hover:bg-gray-50">
+                <td class="p-3"><input type="checkbox" class="delegate-checkbox rounded border-gray-400" data-id="${d.id}" ${selectedDelegateIds.has(d.id) ? 'checked' : ''}></td>
+                <td class="px-4 py-3 font-medium">${d.firstName} ${d.lastName}</td>
+                <td class="px-4 py-3">${d.company || '-'}</td>
+                <td class="px-4 py-3">${d.email}</td>
+                <td class="px-4 py-3">${d.regNumber}</td>
+                <td class="px-4 py-3 font-semibold">${d.regType}</td>
+                <td class="px-4 py-3 text-right space-x-1">
+                    <button data-id="${d.id}" title="Editare" class="edit-btn text-blue-600 p-1 hover:text-blue-800"><svg class="h-5 w-5 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"/><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"/></svg></button>
+                    <button data-id="${d.id}" title="Ștergere" class="delete-btn text-red-600 p-1 hover:text-red-800"><svg class="h-5 w-5 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg></button>
+                </td>
+            </tr>`).join('');
+        
+        renderPagination(filteredDelegates.length, totalPages);
+        renderDashboard();
+        updateBulkDeleteButton();
+    };
+
+    const resetForm = () => {
+        form.reset();
+        document.getElementById('delegate-id-input').value = '';
+        setLanguage(currentLanguage); // Re-aplică traducerile pe butoane/titluri
+        document.getElementById('cancel-edit-btn').classList.add('hidden');
+        document.getElementById('email-error').classList.add('hidden');
+    };
+
+    // --- Funcții de Date (modificate pentru Supabase) ---
+    async function loadDelegates() {
+        const { data, error } = await supabaseClient.from('delegates').select('*');
+        if (error) {
+            console.error('Error loading delegates:', error);
+            return showMessage('modal_error_title', `Eroare la încărcarea delegaților: ${error.message}`, false);
+        }
+        allDelegates = data;
+        renderPage();
+    }
+
+    async function handleFormSubmit(e) {
+        e.preventDefault();
+        const emailInput = document.getElementById('delegate-email');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) {
+            return showMessage('modal_error_title', 'invalid_email_error', false);
+        }
+
+        const delegateData = {
+            firstName: document.getElementById('delegate-firstName').value.trim(),
+            lastName: document.getElementById('delegate-lastName').value.trim(),
+            company: document.getElementById('delegate-company').value.trim(),
+            email: emailInput.value.trim(),
+            phone: document.getElementById('delegate-phone').value.trim(),
+            regNumber: document.getElementById('delegate-regNumber').value.trim(),
+            regType: document.getElementById('delegate-regType').value,
+            certificateUrl: document.getElementById('delegate-certificateUrl').value.trim(),
+        };
+        const delegateId = document.getElementById('delegate-id-input').value;
+
+        if (!delegateData.firstName || !delegateData.lastName || !delegateData.email || !delegateData.regNumber) {
+            return showMessage('modal_error_title', 'required_fields_error', false);
+        }
+        
+        let result;
+        if (delegateId) {
+            result = await supabaseClient.from('delegates').update(delegateData).eq('id', delegateId);
+        } else {
+            result = await supabaseClient.from('delegates').insert([delegateData]);
+        }
+
+        if (result.error) {
+            console.error('Eroare Supabase:', result.error);
+            if (result.error.code === '23505') {
+                return showMessage('modal_error_title', 'duplicate_error_text', false);
+            }
+            return showMessage('modal_error_title', `Eroare: ${result.error.message}`, false);
+        }
+        
+        // FIX: Resetează filtrele și formularul pentru a afișa corect noul adăugat
+        resetForm();
+        document.getElementById('table-search').value = '';
+        filters.searchTerm = '';
+        await loadDelegates();
+    }
+
+    async function handleDeleteSelected() {
+        if (selectedDelegateIds.size === 0) return;
+        showDestructiveConfirmation('modal_confirm_title', 'modal_confirm_delete_selected_text', 'DELETE', async () => {
+            const { error } = await supabaseClient.from('delegates').delete().in('id', Array.from(selectedDelegateIds));
+            if (error) { return showMessage('modal_error_title', `Eroare: ${error.message}`, false); }
+            
+            selectedDelegateIds.clear();
+            document.getElementById('select-all-checkbox').checked = false;
+            await loadDelegates();
+        });
+    }
+
+    // --- Autentificare (modificată pentru Supabase) ---
+    function renderLoginModal() {
+        mainContent.classList.add('hidden');
+        passwordModal.classList.remove('hidden');
+        document.getElementById('logout-btn').classList.add('hidden');
+        passwordModal.innerHTML = `<form id="password-form" class="bg-white p-8 rounded-lg shadow-xl max-w-sm w-full glass-container"> <h2 class="text-xl font-bold mb-4 text-center">${translations.password_title[currentLanguage]}</h2> <p class="text-center text-gray-600 mb-6">${translations.password_text[currentLanguage]}</p> <input type="email" id="admin-email" required class="w-full p-2 border border-gray-300 rounded-md form-input mb-4" placeholder="Email"> <input type="password" id="admin-password" required class="w-full p-2 border border-gray-300 rounded-md form-input mb-4" placeholder="Parolă"> <button type="submit" class="btn bg-blue-600 text-white w-full">Login</button> <p id="password-error" class="text-red-500 text-sm mt-2 text-center hidden">${translations.password_error_text[currentLanguage]}</p> </form>`;
+        document.getElementById('password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) {
+                document.getElementById('password-error').classList.remove('hidden');
+            }
+        });
+    }
+
+    // --- Inițializare și Event Listeners ---
+    function setupEventListeners() {
+        form.addEventListener('submit', handleFormSubmit);
+        document.getElementById('cancel-edit-btn').addEventListener('click', resetForm);
+        document.getElementById('logout-btn').addEventListener('click', async () => await supabaseClient.auth.signOut());
+        darkModeToggle.addEventListener('click', () => { document.documentElement.classList.toggle('dark'); });
+        langSwitcher.addEventListener('click', (e) => { const btn = e.target.closest('[data-lang]'); if (btn) setLanguage(btn.dataset.lang); });
+        document.getElementById('delete-selected-btn').addEventListener('click', handleDeleteSelected);
+        const debouncedRender = debounce(renderPage, 300);
+        document.getElementById('table-search').addEventListener('input', (e) => { currentPage = 1; filters.searchTerm = e.target.value.toLowerCase(); debouncedRender(); });
+        document.getElementById('reg-type-filter').addEventListener('change', e => { currentPage = 1; filters.regType = e.target.value; renderPage(); });
+        document.getElementById('table-section').addEventListener('click', async (e) => {
+            const target = e.target;
+            const actionButton = target.closest('button[data-id]');
+            if (actionButton) {
+                const id = actionButton.dataset.id;
+                if (actionButton.classList.contains('edit-btn')) {
+                    const delegate = allDelegates.find(d => d.id === id);
+                    if (!delegate) return;
+                    document.getElementById('delegate-id-input').value = delegate.id;
+                    document.getElementById('delegate-firstName').value = delegate.firstName;
+                    document.getElementById('delegate-lastName').value = delegate.lastName;
+                    document.getElementById('delegate-company').value = delegate.company;
+                    document.getElementById('delegate-email').value = delegate.email;
+                    document.getElementById('delegate-phone').value = delegate.phone;
+                    document.getElementById('delegate-regNumber').value = delegate.regNumber;
+                    document.getElementById('delegate-regType').value = delegate.regType;
+                    document.getElementById('delegate-certificateUrl').value = delegate.certificateUrl || '';
+                    document.getElementById('form-title').textContent = translations.modal_edit_delegate_title[currentLanguage];
+                    document.getElementById('save-btn-text').textContent = translations.modal_update_button[currentLanguage];
+                    document.getElementById('cancel-edit-btn').classList.remove('hidden');
+                }
+                if (actionButton.classList.contains('delete-btn')) {
+                    showDestructiveConfirmation('modal_confirm_title', 'modal_confirm_delete_text', 'DELETE', async () => {
+                        const { error } = await supabaseClient.from('delegates').delete().eq('id', id);
+                        if (error) { return showMessage('modal_error_title', `Eroare: ${error.message}`, false); }
+                        await loadDelegates();
+                    });
+                }
+            }
+        });
+    }
+
+    async function initializeApp() {
+        mainContent.classList.remove('hidden');
+        passwordModal.classList.add('hidden');
+        document.getElementById('logout-btn').classList.remove('hidden');
+        
+        // FIX: Asigură-te că event listenerii sunt atașați
+        setupEventListeners();
+
+        // FIX: Populează dropdown-urile
+        document.getElementById('delegate-regType').innerHTML = REG_TYPES.map(type => `<option value="${type}">${type}</option>`).join('');
+        document.getElementById('reg-type-filter').innerHTML = `<option value="all">Toate Tipurile</option>` + REG_TYPES.map(type => `<option value="${type}">${type}</option>`).join('');
+
+        await loadDelegates();
+        updateClock();
+        setInterval(updateClock, 30000);
+    }
+    
+    // --- Punctul de intrare ---
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        if (session) {
+            await initializeApp();
+        } else {
+            mainContent.classList.add('hidden');
+            renderLoginModal();
+        }
+    });
+});
+</script>
+
+</body>
+</html>
